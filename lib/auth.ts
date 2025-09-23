@@ -12,12 +12,44 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { emailOTP } from "better-auth/plugins";
+import { count, eq } from "drizzle-orm";
 
 // Utility function to safely parse dates
 function safeParseDate(value: string | Date | null | undefined): Date | null {
   if (!value) return null;
   if (value instanceof Date) return value;
   return new Date(value);
+}
+
+// Utility function to assign user roles
+export async function assignUserRole(userId: string): Promise<void> {
+  try {
+    // Check if this is the first user (super admin) or a regular user
+    const userCount = await db.select({ count: count() }).from(user);
+    const totalUsers = userCount[0]?.count || 0;
+    
+    // If this is the first user, make them super admin
+    const role = totalUsers <= 1 ? "super_admin" : "user";
+    
+    // Update the user's role
+    await db
+      .update(user)
+      .set({ role })
+      .where(eq(user.id, userId));
+      
+    console.log(`User role assigned: ${role} for user ID: ${userId}`);
+  } catch (error) {
+    console.error("Error assigning user role:", error);
+    // Fallback to user role if there's an error
+    try {
+      await db
+        .update(user)
+        .set({ role: "user" })
+        .where(eq(user.id, userId));
+    } catch (fallbackError) {
+      console.error("Error assigning fallback role:", fallbackError);
+    }
+  }
 }
 
 const polarClient = new Polar({
@@ -53,7 +85,6 @@ export const auth = betterAuth({
     },
   },
   plugins: [
-    emailOTP(),
     polar({
       client: polarClient,
       createCustomerOnSignUp: true,

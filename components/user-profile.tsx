@@ -21,6 +21,7 @@ interface UserInfo {
   image?: string | null | undefined;
   email: string;
   emailVerified: boolean;
+  role?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -102,10 +103,19 @@ export default function UserProfile({ mini }: { mini?: boolean }) {
             )}
           </Avatar>
           {mini ? null : (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col">
               <p className="font-medium text-md">
                 {loading ? "Loading..." : userInfo?.name || "User"}
               </p>
+              {userInfo?.role && (
+                <span className={`text-xs px-2 py-1 rounded-full self-start ${
+                  userInfo.role === "super_admin"
+                    ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                    : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                }`}>
+                  {userInfo.role === "super_admin" ? "Super Admin" : "User"}
+                </span>
+              )}
               {loading && <Loader2 className="h-3 w-3 animate-spin" />}
             </div>
           )}
@@ -127,6 +137,14 @@ export default function UserProfile({ mini }: { mini?: boolean }) {
               <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
             </DropdownMenuItem>
           </Link>
+          {userInfo?.role === "super_admin" && (
+            <Link href="/admin">
+              <DropdownMenuItem>
+                Admin Panel
+                <DropdownMenuShortcut>⌘A</DropdownMenuShortcut>
+              </DropdownMenuItem>
+            </Link>
+          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>

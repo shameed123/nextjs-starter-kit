@@ -15,6 +15,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
+  // Check for super admin only routes (if needed in the future)
+  // Example: Admin panel routes
+  if (pathname.startsWith("/admin")) {
+    if (!sessionCookie) {
+      return NextResponse.redirect(new URL("/sign-in", request.url));
+    }
+    // Note: Role checking would require fetching user data from database
+    // For now, we'll implement this in the actual admin pages
+  }
+
   // Authentication is now optional - allow access to dashboard without authentication
   // Users can still sign in if they want, but it's not required
   
@@ -22,5 +32,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/sign-in", "/sign-up"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/sign-in", "/sign-up"],
 };

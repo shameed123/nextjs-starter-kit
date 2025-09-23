@@ -52,7 +52,22 @@ function SignUpContent() {
           callbackURL: returnTo || "/dashboard",
         },
         {
-          onSuccess: () => {
+          onSuccess: async (ctx) => {
+            // Assign role to the newly created user
+            if (ctx.data?.user?.id) {
+              try {
+                await fetch("/api/assign-role", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ userId: ctx.data.user.id }),
+                });
+              } catch (error) {
+                console.error("Failed to assign role:", error);
+                // Don't show error to user as signup was successful
+              }
+            }
             toast.success("Account created successfully!");
           },
           onError: (ctx) => {
@@ -167,6 +182,23 @@ function SignUpContent() {
                       },
                       onResponse: () => {
                         setLoading(false);
+                      },
+                      onSuccess: async (ctx) => {
+                        // Assign role to the newly created user (for new Google users)
+                        if (ctx.data?.user?.id) {
+                          try {
+                            await fetch("/api/assign-role", {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                              },
+                              body: JSON.stringify({ userId: ctx.data.user.id }),
+                            });
+                          } catch (error) {
+                            console.error("Failed to assign role:", error);
+                            // Don't show error to user as signup was successful
+                          }
+                        }
                       },
                       onError: (error) => {
                         setLoading(false);
