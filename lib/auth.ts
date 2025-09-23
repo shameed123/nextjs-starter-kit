@@ -11,6 +11,7 @@ import { Polar } from "@polar-sh/sdk";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
+import { emailOTP } from "better-auth/plugins";
 
 // Utility function to safely parse dates
 function safeParseDate(value: string | Date | null | undefined): Date | null {
@@ -41,6 +42,10 @@ export const auth = betterAuth({
       subscription,
     },
   }),
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: false, // Set to false to make signup easier
+  },
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -48,6 +53,7 @@ export const auth = betterAuth({
     },
   },
   plugins: [
+    emailOTP(),
     polar({
       client: polarClient,
       createCustomerOnSignUp: true,

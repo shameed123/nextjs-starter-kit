@@ -10,14 +10,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // If user is signed in and tries to access sign-in/sign-up, redirect to dashboard
   if (sessionCookie && ["/sign-in", "/sign-up"].includes(pathname)) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  if (!sessionCookie && pathname.startsWith("/dashboard")) {
-    return NextResponse.redirect(new URL("/sign-in", request.url));
-  }
-
+  // Authentication is now optional - allow access to dashboard without authentication
+  // Users can still sign in if they want, but it's not required
+  
   return NextResponse.next();
 }
 
