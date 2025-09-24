@@ -15,48 +15,79 @@ The system now supports:
 
 ### Option 1: Multiple Plans (Recommended)
 
-Set the `NEXT_PUBLIC_SUBSCRIPTION_PLANS` environment variable with a JSON array:
+Set the `NEXT_PUBLIC_SUBSCRIPTION_PLANS` environment variable with a readable JSON array:
 
-```json
-NEXT_PUBLIC_SUBSCRIPTION_PLANS=[
+```env
+NEXT_PUBLIC_SUBSCRIPTION_PLANS='[
   {
     "id": "starter",
     "name": "Starter",
-    "slug": "starter", 
+    "slug": "starter",
     "description": "Perfect for getting started",
     "price": 1000,
     "currency": "USD",
     "interval": "month",
     "productId": "your-starter-product-id",
     "features": [
-      {"name": "5 Projects", "included": true},
-      {"name": "10GB Storage", "included": true},
-      {"name": "1 Team Member", "included": true, "limit": 1},
-      {"name": "Email Support", "included": true}
+      {
+        "name": "5 Projects",
+        "included": true
+      },
+      {
+        "name": "10GB Storage",
+        "included": true
+      },
+      {
+        "name": "1 Team Member",
+        "included": true,
+        "limit": 1
+      },
+      {
+        "name": "Email Support",
+        "included": true
+      }
     ],
     "buttonText": "Get Started"
   },
   {
-    "id": "pro", 
+    "id": "pro",
     "name": "Professional",
     "slug": "pro",
     "description": "For growing teams",
     "price": 2500,
     "currency": "USD",
-    "interval": "month", 
+    "interval": "month",
     "productId": "your-pro-product-id",
-    "features": [
-      {"name": "25 Projects", "included": true},
-      {"name": "100GB Storage", "included": true}, 
-      {"name": "10 Team Members", "included": true, "limit": 10},
-      {"name": "Priority Support", "included": true},
-      {"name": "Advanced Analytics", "included": true}
-    ],
     "popular": true,
+    "features": [
+      {
+        "name": "25 Projects",
+        "included": true
+      },
+      {
+        "name": "100GB Storage",
+        "included": true
+      },
+      {
+        "name": "10 Team Members",
+        "included": true,
+        "limit": 10
+      },
+      {
+        "name": "Priority Support",
+        "included": true
+      },
+      {
+        "name": "Advanced Analytics",
+        "included": true
+      }
+    ],
     "buttonText": "Upgrade to Pro"
   }
-]
+]'
 ```
+
+**Note:** Use single quotes around the entire JSON string to allow proper multiline formatting in `.env` files.
 
 ### Option 2: Legacy Single Plan (Backward Compatible)
 

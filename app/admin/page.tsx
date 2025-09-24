@@ -82,9 +82,9 @@ export default function AdminPage() {
               <div className="space-y-2">
                 <p><strong>Name:</strong> {session?.user?.name}</p>
                 <p><strong>Email:</strong> {session?.user?.email}</p>
-                <p><strong>Role:</strong> 
+                <p><strong>Role:</strong>
                   <span className="ml-2 px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full text-xs">
-                    {(session?.user as any)?.role === "super_admin" ? "Super Admin" : "User"}
+                    {(session?.user as { role?: string })?.role === "super_admin" ? "Super Admin" : "User"}
                   </span>
                 </p>
               </div>

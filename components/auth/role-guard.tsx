@@ -20,9 +20,9 @@ export function RoleGuard({ children, allowedRoles, fallback }: RoleGuardProps) 
     return fallback || <div>Access denied. Please sign in.</div>;
   }
 
-  const userRole = (session.user as any)?.role || "user";
+  const userRole = (session.user as { role?: string })?.role || "user";
   
-  if (!allowedRoles.includes(userRole)) {
+  if (!allowedRoles.includes(userRole as "super_admin" | "user")) {
     return fallback || <div>Access denied. Insufficient permissions.</div>;
   }
 

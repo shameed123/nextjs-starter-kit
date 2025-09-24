@@ -179,7 +179,7 @@ function SignInContent() {
       </Card>
       
       <p className="mt-6 text-xs text-center text-gray-500 dark:text-gray-400 max-w-md">
-        Don't have an account?{" "}
+        Don&apos;t have an account?{" "}
         <Link
           href="/sign-up"
           className="underline hover:text-gray-700 dark:hover:text-gray-300"
