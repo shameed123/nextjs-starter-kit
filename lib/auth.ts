@@ -11,8 +11,8 @@ import { Polar } from "@polar-sh/sdk";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { emailOTP } from "better-auth/plugins";
 import { count, eq } from "drizzle-orm";
+import { getAllProductsForCheckout, validateSubscriptionPlans } from "@/lib/subscription-plans";
 
 // Utility function to safely parse dates
 function safeParseDate(value: string | Date | null | undefined): Date | null {
@@ -57,6 +57,19 @@ const polarClient = new Polar({
   server: "sandbox",
 });
 
+// Validate subscription plans configuration at startup
+const planValidation = validateSubscriptionPlans();
+if (!planValidation.valid) {
+  console.error("Subscription plans configuration errors:", planValidation.errors);
+  throw new Error(`Invalid subscription plans configuration: ${planValidation.errors.join(', ')}`);
+}
+
+// Get all configured products for checkout
+const checkoutProducts = getAllProductsForCheckout();
+if (checkoutProducts.length === 0) {
+  throw new Error("No subscription plans configured. Please configure NEXT_PUBLIC_SUBSCRIPTION_PLANS or legacy environment variables.");
+}
+
 export const auth = betterAuth({
   trustedOrigins: [`${process.env.NEXT_PUBLIC_APP_URL}`],
   allowedDevOrigins: [`${process.env.NEXT_PUBLIC_APP_URL}`],
@@ -90,24 +103,7 @@ export const auth = betterAuth({
       createCustomerOnSignUp: true,
       use: [
         checkout({
-          products: [
-            {
-              productId:
-                process.env.NEXT_PUBLIC_STARTER_TIER ||
-                (() => {
-                  throw new Error(
-                    "NEXT_PUBLIC_STARTER_TIER environment variable is required",
-                  );
-                })(),
-              slug:
-                process.env.NEXT_PUBLIC_STARTER_SLUG ||
-                (() => {
-                  throw new Error(
-                    "NEXT_PUBLIC_STARTER_SLUG environment variable is required",
-                  );
-                })(),
-            },
-          ],
+          products: checkoutProducts,
           successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/${process.env.POLAR_SUCCESS_URL}`,
           authenticatedUsersOnly: true,
         }),

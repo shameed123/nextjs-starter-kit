@@ -3,6 +3,7 @@ import { db } from "@/db/drizzle";
 import { subscription } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
+import { getSubscriptionPlanByProductId, type SubscriptionPlan } from "@/lib/subscription-plans";
 
 export type SubscriptionDetails = {
   id: string;
@@ -16,6 +17,7 @@ export type SubscriptionDetails = {
   cancelAtPeriodEnd: boolean;
   canceledAt: Date | null;
   organizationId: string | null;
+  plan?: SubscriptionPlan; // Added plan details for easier access
 };
 
 export type SubscriptionDetailsResult = {
@@ -59,6 +61,8 @@ export async function getSubscriptionDetails(): Promise<SubscriptionDetailsResul
         const isExpired = new Date(latestSubscription.currentPeriodEnd) < now;
         const isCanceled = latestSubscription.status === "canceled";
 
+        const plan = getSubscriptionPlanByProductId(latestSubscription.productId);
+        
         return {
           hasSubscription: true,
           subscription: {
@@ -73,6 +77,7 @@ export async function getSubscriptionDetails(): Promise<SubscriptionDetailsResul
             cancelAtPeriodEnd: latestSubscription.cancelAtPeriodEnd,
             canceledAt: latestSubscription.canceledAt,
             organizationId: null,
+            plan,
           },
           error: isCanceled ? "Subscription has been canceled" : isExpired ? "Subscription has expired" : "Subscription is not active",
           errorType: isCanceled ? "CANCELED" : isExpired ? "EXPIRED" : "GENERAL",
@@ -82,6 +87,8 @@ export async function getSubscriptionDetails(): Promise<SubscriptionDetailsResul
       return { hasSubscription: false };
     }
 
+    const plan = getSubscriptionPlanByProductId(activeSubscription.productId);
+    
     return {
       hasSubscription: true,
       subscription: {
@@ -96,6 +103,7 @@ export async function getSubscriptionDetails(): Promise<SubscriptionDetailsResul
         cancelAtPeriodEnd: activeSubscription.cancelAtPeriodEnd,
         canceledAt: activeSubscription.canceledAt,
         organizationId: null,
+        plan,
       },
     };
   } catch (error) {
@@ -145,4 +153,60 @@ export async function getUserSubscriptionStatus(): Promise<"active" | "canceled"
   }
   
   return "none";
+}
+
+// Helper to get all user's subscriptions with plan details
+export async function getUserSubscriptions(): Promise<Array<SubscriptionDetails & { plan?: SubscriptionPlan }>> {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user?.id) {
+      return [];
+    }
+
+    const userSubscriptions = await db
+      .select()
+      .from(subscription)
+      .where(eq(subscription.userId, session.user.id));
+
+    return userSubscriptions.map(sub => {
+      const plan = getSubscriptionPlanByProductId(sub.productId);
+      return {
+        id: sub.id,
+        productId: sub.productId,
+        status: sub.status,
+        amount: sub.amount,
+        currency: sub.currency,
+        recurringInterval: sub.recurringInterval,
+        currentPeriodStart: sub.currentPeriodStart,
+        currentPeriodEnd: sub.currentPeriodEnd,
+        cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
+        canceledAt: sub.canceledAt,
+        organizationId: null,
+        plan,
+      };
+    });
+  } catch (error) {
+    console.error("Error fetching user subscriptions:", error);
+    return [];
+  }
+}
+
+// Helper to check if user has access to any of multiple product IDs
+export async function hasAccessToAnyProduct(productIds: string[]): Promise<{ hasAccess: boolean; activeProduct?: string }> {
+  const result = await getSubscriptionDetails();
+  
+  if (!result.hasSubscription || result.subscription?.status !== "active") {
+    return { hasAccess: false };
+  }
+  
+  const activeProductId = result.subscription.productId;
+  const hasAccess = productIds.includes(activeProductId);
+  
+  return {
+    hasAccess,
+    activeProduct: hasAccess ? activeProductId : undefined
+  };
 }
